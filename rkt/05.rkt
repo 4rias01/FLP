@@ -4,7 +4,6 @@
   (lambda (L1 L2)
     (cond
       [(eqv? L1 empty) L2]
-      [(number? L1) (cons L1 L2)]
       [else (cons (car L1) (unir-listas (cdr L1) L2))]))
   )
 
