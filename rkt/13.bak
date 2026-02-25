@@ -1,0 +1,18 @@
+#lang eopl
+
+;Taller FLP: Punto 12*
+
+;Funciones Auxiliares--------------------------------------------------------------
+
+
+
+;Fin Funciones Auxiliares----------------------------------------------------------
+
+(define operate
+  (lambda (Irators Irands)
+    (if)))
+
+
+
+
+;; Pruebas :
