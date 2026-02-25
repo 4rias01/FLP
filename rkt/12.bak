@@ -1,0 +1,19 @@
+#lang eopl
+
+;Taller FLP: Punto 10*
+
+;Funciones Auxiliares--------------------------------------------------------------
+
+
+
+;Fin Funciones Auxiliares----------------------------------------------------------
+
+
+
+(define balanced-parentheses?
+  (lambda (L)
+    (auxParenth L 0)
+    ))
+
+
+;; Pruebas :
