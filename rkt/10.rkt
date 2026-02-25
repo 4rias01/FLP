@@ -12,8 +12,8 @@
     (cond
       ( (< acum 0) #f ) 
       ( (null? list) (= acum 0) ) 
-      ( (eqv? (car list) #\( ) (auxParenth (cdr list) (+ acum 1)))
-      ( (eqv? (car list) #\) ) (auxParenth (cdr list) (- acum 1)))    
+      ( (eqv? (car list) 'O ) (auxParenth (cdr list) (+ acum 1)))
+      ( (eqv? (car list) 'C ) (auxParenth (cdr list) (- acum 1)))    
       (else #f))))
 
 (define balanced-parentheses?
