@@ -476,11 +476,15 @@
 
 
 
-;; Ejercicio 14.
+;; Ejercicio 14
 
-;; path :
+;; path:
 ;; Proposito:
-;; L -> L : Procedimiento que encuentra la ruta para llegar a un numero dado en un arbol binario, devuelve una lista con la ruta a seguir.
+;; number x <arbol-binario> -> (listof symbol) : dado un número y un árbol binario, devuelve la lista de direcciones ('left o 'right) que conducen al nodo que contiene el número; devuelve #f si no existe.
+;;
+;; <arbol-binario> ::= empty
+;;                 ::= (number <arbol-binario> <arbol-binario>)
+
 (define (path n tree)
   (cond
     [(null? tree) #f]                         ; si el arbol es vacio, no encontramos el numero en esa ruta, devolvemos falso
@@ -493,16 +497,28 @@
              (if right-path                          ; mismo check que con el izquierdo
                  (cons 'right right-path)            ; si no tenemos #f entonces devolvemos con el right al inicio
                  #f))))]))                           ; esto en teoria no deberia pasar porque los arboles deben tener el numero, pero por si acaso, devolvemos #f si no lo encontramos
+;; Pruebas:
+;; elemento en raíz
+(path 5 '(5 (3 () ()) (4 () ()))) ;; => '( )
+;; elemento en subárbol izquierdo
+(path 3 '(5 (3 () ()) (4 () ()))) ;; => '(left)
+;; elemento en subárbol derecho profundo
+(path 4 '(5 (3 () ()) (6 (2 (8 () ()) (4)) ()))) ;; => '(right left right)
+;; no existe en el árbol
+(path 42 '(5 (3 () ()) (4 () ()))) ;; => #f
 
 
 
 
+;; Ejercicio 15
 
-;; Ejercicio 15.
-
-;; count-odd-and-even :
+;; count-odd-and-even:
 ;; Proposito:
-;; L -> (x,y) : Procedimiento que cuenta el numero de nodos pares e impares en un arbol binario dado, devuelve una tupla con el numero de nodos pares e impares respectivamente.
+;; <arbol-binario> -> (list number number) : dado un árbol binario de números, retorna la pareja (pares impares) con la cantidad de nodos pares e impares.
+;;
+;; <arbol-binario> ::= empty
+;;                 ::= (number <arbol-binario> <arbol-binario>)
+
 (define (count-odd-and-even arbol)
   (cond
     ;; Nuestro caso base, cuando el arbol es vacio
@@ -522,26 +538,49 @@
            (list (+ (car res-izq) (car res-der))
                  (+ (cadr res-izq) (cadr res-der) 1))))]))
 
+;; Pruebas:
+(count-odd-and-even '()) ;; => (0 0)
+(count-odd-and-even '(2 () ())) ;; => (1 0)
+(count-odd-and-even '(1 (2 () ()) (3 () ()))) ;; => (1 2)
+(count-odd-and-even '(4 (5 () ()) (6 () (7 () ())))) ;; => (2 2)
 
 
 
-;; Ejercicio 16.
 
-;; hanoi :
+
+;; Ejercicio 16
+
+;; hanoi:
 ;; Proposito:
-;; L -> L : Procedimiento que resuelve el problema de las torres de hanoi, recibe el numero de discos y los nombres de las torres, devuelve una lista con los movimientos necesarios para resolver el problema.
+;; number x symbol x symbol x symbol -> (listof (list symbol symbol)) : recibe el número de discos n y los nombres de las tres torres A, B, C; devuelve la lista de movimientos necesarios para trasladar la pila de A a C usando B como auxiliar. Cada movimiento es una pareja (from to).
+;;
+;; No se utiliza ninguna estructura recursiva adicional más allá de números y símbolos.
+
 (define (hanoi n A B C)
   (if (= n 1)
       (list (list A C))
       (append
-       (hanoi (- n 1) A C B)
-       (list (list A C))B
+       (append (hanoi (- n 1) A C B) (list (list A C)))
        (hanoi (- n 1) B A C))))
 
+;; Pruebas:
+(hanoi 1 'A 'B 'C) ;; => '((A C))
+(hanoi 2 'A 'B 'C) ;; => '((A B) (A C) (B C))
+(hanoi 3 'A 'B 'C) ;; => '((A C) (A B) (C B) (A C) (B A) (B C) (A C))
+(hanoi 4 'A 'B 'C) ;; movimientos esperados de 15 pasos
 
 
 
-;; Ejercicio 17.
+
+
+;; Ejercicio 17
+
+;; coin-change:
+;; Proposito:
+;; number x (listof number) -> number : dado un monto y una lista de monedas (valores positivos), retorna el número de maneras de cambiar el monto usando las monedas disponibles (puede usar cada moneda varias veces).
+;;
+;; <List> ::= ()
+;;        ::= (<number> <List>)
 
 (define coin-change
   (lambda (monto monedas)
@@ -552,11 +591,24 @@
       [else (+ (coin-change (- monto (car monedas)) monedas)
                (coin-change monto (cdr monedas)))])))
 
+;; Pruebas:
+(coin-change 0 '(1 2 5)) ;; => 1
+(coin-change 5 '(1 2 5)) ;; => 4
+(coin-change 3 '(2))    ;; => 0
+(coin-change 5 '())     ;; => 0
 
 
 
-;; Ejercicio 18.
 
+
+;; Ejercicio 18
+
+;; sumar-listas:
+;; Proposito:
+;; (listof number) x (listof number) -> (listof number) : suma elemento a elemento dos listas de números; si una lista termina antes, se detiene.
+;;
+;; <List> ::= ()
+;;        ::= (<number> <List>)
 
 (define sumar-listas
   (lambda (L1 L2)
@@ -564,6 +616,19 @@
       [(or (eqv? L1 empty) (eqv? L2 empty)) empty]
       [else (cons (+ (car L1) (car L2)) (sumar-listas (cdr L1) (cdr L2)))]))
   )
+
+;; Pruebas:
+(sumar-listas '(1 2 3) '(4 5 6)) ;; => (5 7 9)
+(sumar-listas '() '(1 2))        ;; => ()
+(sumar-listas '(1 2) '())        ;; => ()
+(sumar-listas '(5 5) '(1 2 3))   ;; => (6 7)
+
+;; pascal :
+;; Proposito:
+;; number -> (listof number) : devuelve la fila N del triángulo de Pascal (1-indexada).
+;;
+;; <List> ::= ()
+;;        ::= (<number> <List>)
 
 (define pascal
   (lambda (N)
@@ -574,7 +639,10 @@
                  [fila2 (append fila-prev '(0))])
           (sumar-listas fila1 fila2)))))
 
-
-
+;; Pruebas:
+(pascal 1) ;; => (1)
+(pascal 2) ;; => (1 1)
+(pascal 3) ;; => (1 2 1)
+(pascal 5) ;; => (1 4 6 4 1)
 
 
