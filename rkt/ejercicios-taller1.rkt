@@ -5,6 +5,25 @@
 ;; Sebastian Calvo Carvajal (202419118 - 3743)
 
 
+;; FUNCION AUXILIAR GENERAL
+;; -> Se escribe la gramatica de la funcion aqui, pues mas que pertenecer a un solo ejercicio,
+;;    esta funcion se usa en varios del taller.
+;;
+;; append (AUXILIAR):
+;; Proposito :
+;; L x L -> L' : Procedimiento que toma los elementos de dos listas de Simbolos L, y 
+;; los junta en una nueva Lista L' que contiene todos los simbolos de la primer lista
+;; seguidos de los de la segunda.
+;;
+;; <List> ::= ()
+;;        ::= (<Scheme-value> <List>)
+
+(define append
+  (lambda (L1 L2)
+    (if (null? L1)
+        L2
+        (cons (car L1) (append (cdr L1) L2) ) )))
+
 ;; Ejercicio 1.
 
 (define cumplen
@@ -87,18 +106,11 @@
 
 ;; Ejercicio 5.
 
-(define unir-listas
-  (lambda (L1 L2)
-    (cond
-      [(eqv? L1 empty) L2]
-      [else (cons (car L1) (unir-listas (cdr L1) L2))]))
-  )
-
 (define invertir-lista
   (lambda (L)
     (cond
       [(eqv? L empty) empty]
-      [else (unir-listas (invertir-lista (cdr L)) (list (car L)))]
+      [else (append (invertir-lista (cdr L)) (list (car L)))]
       ))
   )
 
@@ -157,21 +169,6 @@
     (if (null? L)
         '()
         (cons (list a (car L)) (auxCombi a (cdr L) ) ) )))
-
-;; append (AUXILIAR):
-;; Proposito :
-;; L x L -> L' : Procedimiento que toma los elementos de dos listas de Simbolos L, y 
-;; los junta en una nueva Lista L' que contiene todos los simbolos de la primer lista
-;; seguidos de los de la segunda.
-;;
-;; <List> ::= ()
-;;        ::= (<Scheme-value> <List>)
-
-(define append
-  (lambda (L1 L2)
-    (if (null? L1)
-        L2
-        (cons (car L1) (append (cdr L1) L2) ) )))
 
 ;; cartesian-product :
 ;; Proposito :
@@ -304,7 +301,7 @@
 
 ;; Ejercicio 10.
 
-;; auxParenth (AUXILIAR):
+;; auxParenth (AUXILIAR INTERNA):
 ;; Proposito :
 ;; L x N -> Bool : Este procedimiento recibe una lista de simbolos L de dos tipos
 ;; 'O (open) y 'C (close) asi como una variable entera de acumulacion N. Retorna un Booleano que 
@@ -391,7 +388,6 @@
 ;; valor inicial acumulador acc y una funcion unaria Fl. Este aplicara la funcio binaria F a todos los
 ;; numeros dentro del intervalo [a , b] que a su vez cumplan con el predicado de la funcion unaria Fl,
 ;; almacenando cada uno de estos valores en acc, retornandolo finalmente el valor total acc'.
-;;
 
 (define filter-acum
   (lambda (a b F acum filter)
@@ -417,11 +413,28 @@
 
 ;; Ejercicio 13.
 
+;; ultimo (AUXILIAR) :
+;; Proposito :
+;; L -> N : Este procedimiento auxiliar toma una lista de elementos L y retorna
+;; el ULTIMO elemento n de la lista L, retornando vacio en caso de que la lista no tenga elementos.
+;;
+;; <List> ::= ()
+;;        ::= (<Scheme-value> <List>)
+
 (define ultimo
   (lambda (lista)
     (cond
+      [(null? lista) '()]
       [(null? (cdr lista)) (car lista)]
       [else (ultimo (cdr lista))])))
+
+;; lst-sin-ultimo (AUXILIAR) :
+;; Proposito :
+;; L -> L' : Este procedimiendo auxiliar toma de entrada una lista de elementos L y
+;; retorna una nueva lista L', que contiene todos los elementos de L MENOS el ultimo elemento.
+;;
+;; <List> ::= ()
+;;        ::= (<Scheme-value> <List>)
 
 (define lst-sin-ultimo
   (lambda (lista)
@@ -431,6 +444,16 @@
     )
   )
 
+;; operate : 
+;; Proposito :
+;; L x L -> N : Este procedimiento recibe dos listas L. la primera, sera una lista de
+;; Operadores binarios de tamaño n, y la segunda, una lista de numeros de tamaño n + 1.
+;; la funcion retornara el resultado de aplicar las operaciones de la primer lista
+;; sucesivamente en los numeros de la segunda lista, retornando el valor acumulado N.
+;;
+;; <List> ::= ()
+;;        ::= (<Scheme-value> <List>)
+
 (define operate
   (lambda (lrators lrands)
     (cond
@@ -438,6 +461,16 @@
       [else ((ultimo lrators) (operate (lst-sin-ultimo lrators) (lst-sin-ultimo lrands)) (ultimo lrands))])
     )
   )
+
+;; Pruebas :
+;; Caso minimo valido (1 operador y 2 numeeos)
+(operate (list +) (list 3 4)) ;; Retorno => 7
+;; 3 operadores distintos:
+(operate (list + - *) (list 10 5 2 1)) ;; Retorno => 13
+;; Resta negativa
+(operate (list - - -) (list 1 5 12 16)) ;; Retorno => -32
+;; Solo productos (factorial)
+(operate (list * * * *) (list 5 4 3 2 1)) ;; Retorno => 120
 
 
 
@@ -538,7 +571,7 @@
         '(1)
         (letrec ([fila-prev (pascal (- N 1))]
                  [fila1 (cons 0 fila-prev)]
-                 [fila2 (unir-listas fila-prev '(0))])
+                 [fila2 (append fila-prev '(0))])
           (sumar-listas fila1 fila2)))))
 
 
