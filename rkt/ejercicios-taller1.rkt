@@ -24,18 +24,70 @@
         L2
         (cons (car L1) (append (cdr L1) L2) ) )))
 
+
+
+
+
+
+
 ;; Ejercicio 1.
+
+;; cumplen (AUXILIAR) :
+;; Proposito:
+;; Par x P -> Bool : Procedimiento que recibe una pareja (lista de 2 elementos)
+;; y un predicado P, retorna #t si AMBOS elementos de la pareja satisfacen
+;; el predicado P, y #f en caso contrario.
+;;
+;; <Pair> ::= (<Scheme-value> <Scheme-value>)
 
 (define cumplen
   (lambda (pareja predicado)
-    (and (predicado (car pareja)) (predicado (cadr pareja)))
-    )
-  )
+    (and (predicado (car pareja)) (predicado (cadr pareja)))))
+
+;; Pruebas:
+;; Caso ambos elementos cumplen el predicado
+(cumplen '(2 4) even?) ;; Retorno => #t
+;; Caso solo uno cumple el predicado
+(cumplen '(2 3) even?) ;; Retorno => #f
+;; Caso ninguno cumple el predicado
+(cumplen '(1 3) even?) ;; Retorno => #f
+
+
+;; cambiar (AUXILIAR) :
+;; Proposito:
+;; Par -> Par' : Procedimiento que recibe una pareja (lista de 2 elementos)
+;; y retorna una nueva pareja Par' con los elementos en orden invertido,
+;; es decir, el segundo elemento pasa a ser el primero y viceversa.
+;;
+;; <Pair> ::= (<Scheme-value> <Scheme-value>)
 
 (define cambiar
   (lambda (pareja)
     (cons (cadr pareja)
           (cons (car pareja) '()))))
+
+;; Pruebas:
+;; Caso par de numeros
+(cambiar '(3 2)) ;; Retorno => (2 3)
+;; Caso par de simbolos
+(cambiar '(a b)) ;; Retorno => (b a)
+
+
+;; invert :
+;; Proposito:
+;; L x P -> L' : Procedimiento que recibe una lista L de pares (listas de
+;; tamaño 2) y un predicado P. Retorna una nueva lista L' con los pares
+;; invertidos (y, x) unicamente de aquellos pares en los que AMBOS elementos
+;; satisfacen el predicado P. Los pares que no cumplen la condicion son
+;; descartados.
+;;
+;; <List>     ::= ()
+;;            ::= (<Pair> <List>)
+;;
+;; <Pair>     ::= (<Scheme-value> <Scheme-value>)
+;;
+;; <Pair-List> ::= ()
+;;              ::= (<Pair> <Pair-List>)
 
 (define invert
   (lambda (L P)
@@ -43,10 +95,19 @@
       [(eqv? L empty) empty]
       [(cumplen (car L) P)
        (cons (cambiar (car L)) (invert (cdr L) P))]
-      [else (invert (cdr L) P)]
-      )
-    )
-  )
+      [else (invert (cdr L) P)])))
+
+;; Pruebas:
+;; Caso con even?
+(invert '((3 2) (4 2) (1 5) (2 8)) even?) ;; Retorno => ((2 4) (8 2))
+;; Caso donde ninguna pareja cumple el predicado
+(invert '((6 9) (10 90) (82 7)) odd?) ;; Retorno => ()
+;; Caso lista vacia
+(invert '() even?) ;; Retorno => ()
+;; Caso todos cumplen el predicado
+(invert '((2 4) (6 8)) even?) ;; Retorno => ((4 2) (8 6))
+
+
 
 
 
@@ -54,20 +115,45 @@
 
 ;; Ejercicio 2.
 
+;; down :
+;; Proposito:
+;; L -> L' : Procedimiento que recibe una lista L y retorna una nueva lista L'
+;; donde cada elemento de L es envuelto en un nivel adicional de parentesis,
+;; es decir, cada elemento x pasa a ser (x).
+;;
+;; <List> ::= ()
+;;        ::= (<Scheme-value> <List>)
+
 (define down
   (lambda (L)
     (cond
       [(eqv? L empty) empty]
-      [else (cons (cons (car L) '()) (down (cdr L)))]
-      )
-    )
-  )
+      [else (cons (cons (car L) '()) (down (cdr L)))])))
 
-
+;; Pruebas:
+;; Caso con numeros
+(down '(1 2 3)) ;; Retorno => ((1) (2) (3))
+;; Caso con elementos ya anidados
+(down '((una) (buena) (idea))) ;; Retorno => (((una)) ((buena)) ((idea)))
+;; Caso con elemento complejo
+(down '(un (objeto (mas)) complicado)) ;; Retorno => ((un) ((objeto (mas))) (complicado))
+;; Caso lista vacia
+(down '()) ;; Retorno => ()
 
 
 
 ;; Ejercicio 3.
+
+;; list-set :
+;; Proposito:
+;; L x N x X x P -> L' : Procedimiento que recibe una lista L, un numero n
+;; (indice desde cero), un elemento x y un predicado P. Retorna una lista L'
+;; igual a L, pero con el elemento en la posicion n reemplazado por x,
+;; unicamente si dicho elemento original satisface el predicado P. Si no
+;; lo satisface, la lista se retorna sin cambios.
+;;
+;; <List> ::= ()
+;;        ::= (<Scheme-value> <List>)
 
 (define list-set
   (lambda (L n x P)
@@ -75,19 +161,35 @@
       [(eqv? L empty) empty]
       [(= n 0)
        (if (P (car L))
-               (cons x (cdr L))
-               L)]
+           (cons x (cdr L))
+           L)]
       [else
        (cons (car L)
-             (list-set (cdr L) (- n 1) x P))])
-    )
-  )
+             (list-set (cdr L) (- n 1) x P))])))
 
+;; Pruebas:
+;; Caso donde el elemento en posicion n cumple el predicado
+(list-set '(5 8 7 6) 2 '(1 2) odd?) ;; Retorno => (5 8 (1 2) 6)
+;; Caso donde el elemento en posicion n NO cumple el predicado
+(list-set '(5 8 7 6) 2 '(1 2) even?) ;; Retorno => (5 8 7 6)
+;; Caso posicion 0 con elemento que cumple
+(list-set '(5 8 7 6) 0 '(1 5 10) odd?) ;; Retorno => ((1 5 10) 8 7 6)
+;; Caso posicion 0 con elemento que NO cumple
+(list-set '(5 8 7 6) 0 '(1 5 10) even?) ;; Retorno => (5 8 7 6)
 
 
 
 
 ;; Ejercicio 4.
+
+;; filter-in :
+;; Proposito:
+;; P x L -> L' : Procedimiento que recibe un predicado P y una lista L.
+;; Retorna una nueva lista L' que contiene unicamente los elementos de L
+;; que satisfacen el predicado P, en el mismo orden en que aparecen.
+;;
+;; <List> ::= ()
+;;        ::= (<Scheme-value> <List>)
 
 (define filter-in
   (lambda (P L)
@@ -95,35 +197,71 @@
       [(eqv? L empty) empty]
       [else (if (P (car L))
                 (cons (car L) (filter-in P (cdr L)))
-                (filter-in P (cdr L))
-                )])
-    )
-  )
+                (filter-in P (cdr L)))])))
 
+;; Pruebas:
+;; Caso filtrando numeros
+(filter-in number? '(a 2 (1 3) b 7)) ;; Retorno => (2 7)
+;; Caso filtrando simbolos
+(filter-in symbol? '(a (b c) 17 foo)) ;; Retorno => (a foo)
+;; Caso filtrando strings
+(filter-in string? '(a b u "univalle" "racket" "flp" 28 90 (1 2 3))) ;; Retorno => ("univalle" "racket" "flp")
+;; Caso lista vacia
+(filter-in number? '()) ;; Retorno => ()
 
 
 
 
 ;; Ejercicio 5.
 
+;; invertir-lista (AUXILIAR) :
+;; Proposito:
+;; L -> L' : Procedimiento que recibe una lista de elementos L y retorna
+;; una nueva lista L' con los mismos elementos pero en orden invertido.
+;;
+;; <List> ::= ()
+;;        ::= (<Scheme-value> <List>)
+
 (define invertir-lista
   (lambda (L)
     (cond
       [(eqv? L empty) empty]
-      [else (append (invertir-lista (cdr L)) (list (car L)))]
-      ))
-  )
+      [else (append (invertir-lista (cdr L)) (list (car L)))])))
+
+;; Pruebas:
+;; Caso lista de simbolos
+(invertir-lista '(a b c)) ;; Retorno => (c b a)
+;; Caso lista de un elemento
+(invertir-lista '(x)) ;; Retorno => (x)
+;; Caso lista vacia
+(invertir-lista '()) ;; Retorno => ()
+
+
+;; palindrome? :
+;; Proposito:
+;; L -> Bool : Procedimiento que recibe una lista de simbolos o caracteres
+;; L (que representa una palabra) y retorna #t si la palabra es palindromo,
+;; es decir, se lee igual de izquierda a derecha que de derecha a izquierda,
+;; y #f en caso contrario.
+;;
+;; <List> ::= ()
+;;        ::= (<Symbol> <List>)
 
 (define palindrome?
   (lambda (palabra)
-    (let
-        (
-         (p-inversa (invertir-lista palabra))
-         )
-      (equal? palabra p-inversa)
-      )
-    )
-  )
+    (let ((p-inversa (invertir-lista palabra)))
+      (equal? palabra p-inversa))))
+
+;; Pruebas:
+;; Caso palindromo clasico
+(palindrome? '(r a d a r)) ;; Retorno => #t
+;; Caso palindromo con letras repetidas
+(palindrome? '(n e u q u e n)) ;; Retorno => #t
+;; Caso que NO es palindromo
+(palindrome? '(h o l a)) ;; Retorno => #f
+;; Caso lista vacia (palindromo trivial)
+(palindrome? '()) ;; Retorno => #t
+
 
 
 
@@ -131,20 +269,33 @@
 
 ;; Ejercicio 6.
 
+;; swapper :
+;; Proposito:
+;; E1 x E2 x L -> L' : Procedimiento que recibe dos elementos E1 y E2 y
+;; una lista L. Retorna una nueva lista L' igual a L, donde cada ocurrencia
+;; de E1 es reemplazada por E2 y cada ocurrencia de E2 es reemplazada por E1.
+;; Los demas elementos permanecen sin cambios.
+;;
+;; <List> ::= ()
+;;        ::= (<Scheme-value> <List>)
+
 (define swapper
   (lambda (E1 E2 L)
     (cond
       [(eqv? L empty) empty]
-      [(eqv? (car L) E1) (cons E2
-                               (swapper E1 E2 (cdr L)))]
-      [(eqv? (car L) E2) (cons E1
-                               (swapper E1 E2 (cdr L)))]
-      [else (cons (car L)
-                  (swapper E1 E2 (cdr L))
-                  )])
-    )
-  )
+      [(eqv? (car L) E1) (cons E2 (swapper E1 E2 (cdr L)))]
+      [(eqv? (car L) E2) (cons E1 (swapper E1 E2 (cdr L)))]
+      [else (cons (car L) (swapper E1 E2 (cdr L)))])))
 
+;; Pruebas:
+;; Caso del enunciado basico
+(swapper 'a 'd '(a b c d)) ;; Retorno => (d b c a)
+;; Caso con multiples ocurrencias de ambos elementos
+(swapper 'a 'd '(a d () c d)) ;; Retorno => (d a () c a)
+;; Caso con muchas alternaciones
+(swapper 'x 'y '(y y x y x y x x y)) ;; Retorno => (x x y x y x y y x)
+;; Caso lista vacia
+(swapper 'a 'b '()) ;; Retorno => ()
 
 
 
