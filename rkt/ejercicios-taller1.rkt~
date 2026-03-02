@@ -1,4 +1,4 @@
-#lang eopl
+2#lang eopl
 ;; Ejercicios del Taller 1 :
 ;; Juan Jose Rodriguez Lozano (202419084 - 3743)
 ;; Santiago Arias Rojas (202416285 - 3743)
@@ -170,16 +170,6 @@
         '()
         (cons (list a (car L)) (auxCombi a (cdr L) ) ) )))
 
-;; Pruebas:
-;; Caso lista vacia
-(auxCombi 'a '()) ;; Retorno => ()
-;; Caso simbolo con lista de un elemento
-(auxCombi 'a '(b)) ;; Retorno => ((a b))
-;; Caso simbolo con lista de multiples elementos
-(auxCombi 'x '(1 2 3)) ;; Retorno => ((x 1) (x 2) (x 3))
-;; Caso numero con lista de simbolos
-(auxCombi 1 '(a b c)) ;; Retorno => ((1 a) (1 b) (1 c))
-
 ;; cartesian-product :
 ;; Proposito :
 ;; L x L -> LP : Procedimiento que recibe 2 listas de simbolos sin repeticion L 
@@ -279,18 +269,6 @@
             (if (> (car L) (car (cdr L)) )
                 (+ 1 (sumAux (cons (car L) (cdr(cdr L)) ) ))
                 (sumAux (cons (car L) (cdr(cdr L)) ) ) ) ) )))
-
-;; Pruebas:
-;; Caso lista vacia
-(sumAux '()) ;; Retorno => 0
-;; Caso lista de un elemento (sin inversiones posibles)
-(sumAux '(5)) ;; Retorno => 0
-;; Caso cabeza mayor que todos los demas elementos
-(sumAux '(5 1 2 3)) ;; Retorno => 3
-;; Caso cabeza menor que todos (sin inversiones)
-(sumAux '(1 2 3 4)) ;; Retorno => 0
-;; Caso cabeza mayor que algunos
-(sumAux '(3 1 4 2)) ;; Retorno => 2
 
 ;; inversions :
 ;; Proposito :
@@ -450,22 +428,10 @@
       [(null? (cdr lista)) (car lista)]
       [else (ultimo (cdr lista))])))
 
-;; Pruebas:
-;; Caso lista vacia
-(ultimo '()) ;; Retorno => ()
-;; Caso lista de un elemento
-(ultimo '(1)) ;; Retorno => 1
-;; Caso lista de multiples elementos numericos
-(ultimo '(1 2 3 4)) ;; Retorno => 4
-;; Caso lista de simbolos
-(ultimo '(a b c)) ;; Retorno => c
-
 ;; lst-sin-ultimo (AUXILIAR) :
 ;; Proposito :
 ;; L -> L' : Este procedimiendo auxiliar toma de entrada una lista de elementos L y
 ;; retorna una nueva lista L', que contiene todos los elementos de L MENOS el ultimo elemento.
-;; Es importante señalar que esta lista no maneja el caso de lista vacia puesto que la funcion 
-;; fue hecha asumiendo que las entradas sean dos listas de longitud mayor o igual a 1
 ;;
 ;; <List> ::= ()
 ;;        ::= (<Scheme-value> <List>)
@@ -477,16 +443,6 @@
       [else (cons (car lista) (lst-sin-ultimo (cdr lista)))])
     )
   )
-
-;; Pruebas:
-;; Caso lista de un elemento
-(lst-sin-ultimo '(1)) ;; Retorno => ()
-;; Caso lista de dos elementos
-(lst-sin-ultimo '(1 2)) ;; Retorno => (1)
-;; Caso lista de multiples elementos numericos
-(lst-sin-ultimo '(1 2 3 4)) ;; Retorno => (1 2 3)
-;; Caso lista de simbolos
-(lst-sin-ultimo '(a b c d)) ;; Retorno => (a b c)
 
 ;; operate : 
 ;; Proposito :
@@ -600,12 +556,12 @@
 ;;
 ;; No se utiliza ninguna estructura recursiva adicional más allá de números y símbolos.
 
-(define (hanoi n origen auxiliar destino)
+(define (hanoi n A B C)
   (if (= n 1)
-      (list (list origen destino))
+      (list (list A C))
       (append
-       (append (hanoi (- n 1) origen destino auxiliar) (list (list origen destino)))
-       (hanoi (- n 1) auxiliar origen destino))))
+       (append (hanoi (- n 1) A C B) (list (list A C)))
+       (hanoi (- n 1) B A C))))
 
 ;; Pruebas:
 (hanoi 1 'A 'B 'C) ;; => '((A C))
@@ -647,7 +603,7 @@
 
 ;; Ejercicio 18
 
-;; sumar-listas (AUXILIAR):
+;; sumar-listas:
 ;; Proposito:
 ;; (listof number) x (listof number) -> (listof number) : suma elemento a elemento dos listas de números; si una lista termina antes, se detiene.
 ;;
