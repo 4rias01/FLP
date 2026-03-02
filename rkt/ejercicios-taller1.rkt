@@ -749,7 +749,13 @@
 ;; Proposito:
 ;; number x symbol x symbol x symbol -> (listof (list symbol symbol)) : recibe el número de discos n y los nombres de las tres torres A, B, C; devuelve la lista de movimientos necesarios para trasladar la pila de A a C usando B como auxiliar. Cada movimiento es una pareja (from to).
 ;;
-;; No se utiliza ninguna estructura recursiva adicional más allá de números y símbolos.
+;; <List> ::= ()
+;;        ::= (<number> <List>)
+;; 
+;; <Pair> ::= (<number> <number>)
+;;
+;; <Pair-List> ::= ()
+;;             ::= (<Pair> <Pair-List>)
 
 (define (hanoi n origen auxiliar destino)
   (if (= n 1)
