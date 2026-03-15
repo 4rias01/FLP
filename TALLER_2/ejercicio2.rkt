@@ -76,8 +76,7 @@
 
 ;;---------------------------------------------------------------
 
-;; Parser de literal <lit-exp>
-
+;; Parser de literal <lit-exp> 
 (define parse-lit
   (lambda (dato)
     (cond
@@ -86,18 +85,17 @@
 
 
 ;; Parser de lista de literales <list-lit>
-
 (define parse-listlit
   (lambda (dato)
     (cond
       [ (number? dato) (parse-lit dato)]
-      [ (eqv? (cadr dato) 'or) (parse-or dato) ] )  )) ;;MANEJAR UN TERCER CASO!
+      [ (null? (cdr dato)) (parse-lit (car dato)) ] ;;Tercer caso para manejar listas de un solo elemento
+      [ (eqv? (cadr dato) 'or) (parse-or dato) ] )  )) 
 
-;;[ (eqv? (cadr dato) 'or) (parse-listlit (cdr(parse-or dato)) ) ] )  ))
 
 ;; Parder de Or Expresion <or-exp>
 (define parse-or
   (lambda (dato)
     (make-or-exp
      (parse-lit (car dato))
-     (parse-listlit (caddr dato)) )  )) ;;CACMBIAR ESTO!
+     (parse-listlit (cddr dato)) )  ))
