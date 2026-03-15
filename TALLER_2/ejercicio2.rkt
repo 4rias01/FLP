@@ -73,6 +73,13 @@
 )
 
 
+; clausula
+; --- constructores
+(define (make-clause lits)
+   (list 'clause lits)
+)
+
+
 
 ;;---------------------------------------------------------------
 
@@ -99,3 +106,11 @@
     (make-or-exp
      (parse-lit (car dato))
      (parse-listlit (cddr dato)) )  ))
+
+
+;; Parser de Clausula
+(define parse-clausula
+  (lambda (dato)
+    (make-clause (parse-listlit dato)) ))
+
+
