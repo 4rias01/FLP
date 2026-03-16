@@ -4,16 +4,6 @@
 ;; Sebastian Calvo Carvajal (202419118)
 ;; Juan Jose Rodriguez Lozano (202419084)
 
-;; Declaración de Uso de IA:
-;; Se utilizo IA para:
-;; -En primera instancia, para aclarar y recordar conceptos sobre la FNC, observar cadenas validas y casos singulares
-;; como por ejemplo donde solo se tenga UNA clausula o un literal, y pedirle casos de prueba para probar la correctitud
-;; -Se uso tambien para extender conocimientos sobre el tema de abstracciones y TAD visto clases y comprender con certeza
-;; como funcionaban los elementos de una TAD.
-;; -Se uso la IA para comprender mensajes de error en la consola de DrRacket para hallar las equivocaciones en nuestras
-;; funciones y corregirlas nosotros mismos.
-;; Se declara que todos los integrantes comprenden y pueden explicar
-;; completamente cada solución implementada.
 
 ; 0. Gramatica
 ;     <lit-exp>   ::=  <int>

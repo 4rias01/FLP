@@ -165,12 +165,12 @@
    (if (zero? n)
        (list '())
 
-       (let ([rest (all-assignments (sub1 n))])
+       (let ([rest (all-assignments (- n 1))])
           (append
              (agregar-a-todos #f rest)
              (agregar-a-todos #t rest)))))
 
-;; Solo porque santi me lo pide
+;; Funcion auxiliar para entrar en las listas de los ambientes
 (define (csq-list-ref lst i)
    (if (= i 0)
        (car lst)
@@ -181,8 +181,8 @@
 ;; Evalúa un literal usando una asignación (lista de booleanos indexada desde 1).
 (define (eval-lit lit asign)
   (cases dt-lit-exp lit
-    (dt-pos-lit (n) (csq-list-ref asign (sub1 n))) ;; obtenemos el valor de la variable nesima (indexada desde 1)
-    (dt-neg-lit (n) (not (csq-list-ref asign (sub1 n)))))) ;; la negacion del valor
+    (dt-pos-lit (n) (csq-list-ref asign (- n 1))) ;; obtenemos el valor de la variable nesima (indexada desde 1)
+    (dt-neg-lit (n) (not (csq-list-ref asign (- n 1)))))) ;; la negacion del valor
 
 ;; evaluacion de <list-lit> (or's practicamente)
 (define (eval-listlit lits asign)
@@ -219,7 +219,7 @@
 (define (EVALUARSAT fnc)
    (let ([f (if (and (list? fnc) (eqv? (car fnc) 'FNC))
                (PARSEBNF fnc)
-               ((error "EVALUARSAT: no es FNC" fnc)))])
+               'error)])
       (cases dt-fnc f
          (dt-formula (n cls)
             (buscar (all-assignments n) cls)))
@@ -227,6 +227,6 @@
 )
 
 ;; ejemplos cortos para verificar resultado >:)
-(displayln (EVALUARSAT '(FNC 4 ((1 or -2 or 3 or 4) and (-2 or 3) and (-1 or -2 or -3) and (3 or 4) and (2)))))
-(displayln (EVALUARSAT '(FNC 2 ((1 or 2) and (-1) and (-2)))))
-(displayln (EVALUARSAT '(FNC 1 ((1)) )))
+(EVALUARSAT '(FNC 4 ((1 or -2 or 3 or 4) and (-2 or 3) and (-1 or -2 or -3) and (3 or 4) and (2))))
+(EVALUARSAT '(FNC 2 ((1 or 2) and (-1) and (-2))))
+(EVALUARSAT '(FNC 1 ((1)) ))
