@@ -19,7 +19,6 @@
 
 ;       <fnc-exp> ::= (<int> <list-clausula>)
 
-; 1. Implementacion por medio de Constructores y Extractores (Hecho en base a los datatypes del segundo punto)
 
 ; lit-exp
 
@@ -31,27 +30,6 @@
 (define (make-neg-lit n)
      (list 'neg-lit n)
 )
-
-; --- predicados
-(define (post-lit? exp)
-     (and
-          (pair? exp) 
-          (eq? (car exp) 'pos-lit) 
-          (number? (cadr exp))
-      )
-)
-
-(define (neg-lit? exp)
-     (and
-          (pair? exp) 
-          (eq? (car exp) 'neg-lit) 
-          (number? (cadr exp))
-      )
-)
-
-;; --- predicado general de lit-exp (útil cuando no se usan datatypes)
-(define (lit-exp? exp)
-  (or (post-lit? exp) (neg-lit? exp)))
 
 ; --- extractor
 (define lit-exp->n
@@ -67,27 +45,6 @@
 
 (define (make-or-exp l rest)
      (list 'or-exp l rest)
-)
-
-; --- predicados
-(define (single-lit? exp)
-   (lit-exp? exp)
-)
-
-(define (or-exp? exp)
-     (and
-         (pair? exp)
-         (eq? (car exp) 'or-exp)
-         (lit-exp? (cadr exp))
-         (list-lit? (caddr exp))
-      )
-)
-
-(define (list-lit? exp)
-   (or
-      (single-lit? exp)
-      (or-exp? exp)
-   )
 )
 
 ; --- extractores
@@ -119,15 +76,6 @@
    (list 'clause lits)
 )
 
-; --- predicados
-(define (clause? exp)
-   (and
-      (pair? exp)
-      (eq? (car exp) 'clause)
-      (list-lit? (cadr exp))
-   )
-)
-
 ; --- extractores
 (define clause->lits
    (lambda (clause)
@@ -144,24 +92,6 @@
    (list 'and-exp c rest)
 )
 
-; --- predicados
-(define (single-cl? exp)
-   (clause? exp)
-)
-
-(define (and-exp? exp)
-   (and
-      (pair? exp)
-      (eq? (car exp) 'and-exp)
-      (clause? (cadr exp))
-      (list-clausula? (caddr exp))
-   )
-)
-
-(define (list-clausula? exp)
-  (or
-     (clause? exp)
-     (and-exp? exp)))
 
 ; --- extractores
 (define and-exp->c
@@ -181,16 +111,6 @@
 ; --- constructores
 (define (make-formula n cls)
    (list 'formula n cls)
-)
-
-; --- predicados
-(define (formula? exp)
-   (and
-      (pair? exp)
-      (eq? (car exp) 'formula)
-      (number? (cadr exp))
-      (list-clausula? (caddr exp))
-   )
 )
 
 ; --- extractores
