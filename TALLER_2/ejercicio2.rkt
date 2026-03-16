@@ -9,77 +9,66 @@
 ;     <lit-exp>   ::=  <int>
 ;                 ::= -<int>
 
-;     <or-exp>    ::= <lit-exp> or <list-lit>
+;     <or-exp>    ::= (<lit-exp> or <list-lit>)
 
 ;     <list-lit>  ::= <lit-exp>
-;                 ::= (or-exp)
+;                 ::= <or-exp>
 
-;     <clausula>  ::= (<list-lit>)
+;     <clausula>  ::= <list-lit>
 
 ;     <and-exp>   ::= <clausula> and <list-clausula>
 
 ; <list-clausula> ::= <clausula>
 ;                 ::= <and-exp>
 
+;       <fnc-exp> ::= (<int> <list-clausula>)
 
-; 1. Implementacion por medio de Constructores y Extractores (Hecho en base a los datatypes del segundo punto)
+; 1. Implementacion por medio de DATATYPES (Hecho en base a los datatypes del segundo punto)
 
-; lit-exp
+(define-datatype dt-lit-exp dt-lit-exp?
+  (make-pos-lit 
+      (n number?)
+   )
 
-; --- constructores
-(define (make-pos-lit n)
-     (list 'pos-lit n)
+  (make-neg-lit 
+      (n number?)
+   )
 )
 
-(define (make-neg-lit n)
-     (list 'neg-lit n)
+(define-datatype dt-list-lit dt-list-lit?
+  (make-single-lit 
+      (l dt-lit-exp?)
+   )
+
+  (make-or-exp  
+      (l dt-lit-exp?) 
+      (rest dt-list-lit?)
+   )
+) 
+
+(define-datatype dt-clausula dt-clausula?
+  (make-clause
+      (lits dt-list-lit?)
+   )
 )
 
-; --- predicados
-(define (post-lit? exp)
-     (and
-          (pair? exp) 
-          (eq? (car exp) 'pos-lit) 
-          (number? (cadr exp))
-      )
+(define-datatype dt-list-clausula dt-list-clausula?
+  (make-single-cl
+      (c dt-clausula?)
+   )
+
+  (make-and-exp
+      (c dt-clausula?) 
+      (rest dt-list-clausula?)
+   )
 )
 
-(define (neg-lit? exp)
-     (and
-          (pair? exp) 
-          (eq? (car exp) 'neg-lit) 
-          (number? (cadr exp))
-      )
+(define-datatype dt-fnc dt-fnc?
+  (make-formula
+      (n number?) 
+      (cls dt-list-clausula?)
+   )
 )
-
-;; --- predicado general de lit-exp (útil cuando no se usan datatypes)
-(define (lit-exp? exp)
-  (or (post-lit? exp) (neg-lit? exp)))
-
-; --- extractor
-(define lit-exp->n
-     (lambda (lit-exp)
-          (cadr lit-exp)
-     )
-)
-
-; list-lit
-
-; --- constructores
-; no hacemos uno para single-lit porque es el mismo que el de lit-exp, ya que un single-lit es un lit-exp :3
-
-(define (make-or-exp l rest)
-     (list 'or-exp l rest)
-)
-
-
-; clausula
-; --- constructores
-(define (make-clause lits)
-   (list 'clause lits)
-)
-
-
 
 ;;---------------------------------------------------------------
 
@@ -92,25 +81,33 @@
 
 
 ;; Parser de lista de literales <list-lit>
-(define parse-listlit
-  (lambda (dato)
-    (cond
-      [ (number? dato) (parse-lit dato)]
-      [ (null? (cdr dato)) (parse-lit (car dato)) ] ;;Tercer caso para manejar listas de un solo elemento
-      [ (eqv? (cadr dato) 'or) (parse-or dato) ] )  )) 
-
-
-;; Parder de Or Expresion <or-exp>
-(define parse-or
-  (lambda (dato)
-    (make-or-exp
-     (parse-lit (car dato))
-     (parse-listlit (cddr dato)) )  ))
-
+(define (parse-listlit dato)
+   (cond
+      [(number? dato) (make-single-lit (parse-lit dato))]
+      [(eqv? (cadr dato) 'or) (make-or-exp (parse-lit (car dato)) (parse-listlit (caddr dato)))]
+      )
+)
 
 ;; Parser de Clausula
 (define parse-clausula
   (lambda (dato)
     (make-clause (parse-listlit dato)) ))
 
+
+;; Parser de list-clausula
+(define parse-listclausula
+  (lambda (dato)
+    (cond
+      [(and (list? (car dato)) (null? (cdr dato))) (make-single-cl (parse-clausula (car dato)))]
+      [else (make-and-exp  (parse-clausula (car dato)) (parse-listclausula (cddr dato)))]
+      )
+    ))
+
+;; Parser de FNC
+(define parse-fnc
+  (lambda (dato)
+    (make-formula (cadr dato) (parse-listclausula (caddr dato)))))
+
+
+;; UNPARSER
 
