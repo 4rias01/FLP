@@ -17,6 +17,8 @@
 ; <list-clausula> ::= <clausula>
 ;                 ::= <and-exp>
 
+;       <fnc-exp> ::= (<int> <list-clausula>)
+
 ; 1. Implementacion por medio de Constructores y Extractores (Hecho en base a los datatypes del segundo punto)
 
 ; lit-exp
@@ -61,7 +63,7 @@
 ; list-lit
 
 ; --- constructores
-; no hacemos uno para single-lit porque es el mismo que el de lit-exp, ya que un single-lit es un lit-exp :3
+; no hacemos uno para single-lit porque es el mismo que el de lit-exp, ya que un single-lit es un lit-exp
 
 (define (make-or-exp l rest)
      (list 'or-exp l rest)
@@ -136,7 +138,7 @@
 ; list-clausula
 
 ; --- constructores
-; no hacemos el de single-cl porque es el mismo que el de clausula, ya que un single-cl es una clausula :3
+; no hacemos el de single-cl porque es el mismo que el de clausula, ya que un single-cl es una clausula
 
 (define (make-and-exp c rest)
    (list 'and-exp c rest)
@@ -197,6 +199,10 @@
       (cadr formula)
    )
 )
+
+(define formula->clausulas
+  (lambda (formula)
+    (caddr formula)))
 
 ; 2. Implementacion por medio de Datatypes (Una forma diferente de representar la gramatica sin usar constructores y extractores a mano)
 
