@@ -1,5 +1,10 @@
 #lang eopl
 
+;; TALLER 2: EJERCICIO 2:
+;; Santiago Arias Rojas (202416285)
+;; Sebastian Calvo Carvajal (202419118)
+;; Juan Jose Rodriguez Lozano (202419084)
+
 
 ;; terminal -> se lee directo
 ;; NO terminal -> Requiere su propio PARSER.
@@ -9,105 +14,213 @@
 ;     <lit-exp>   ::=  <int>
 ;                 ::= -<int>
 
-;     <or-exp>    ::= (<lit-exp> or <list-lit>)
+;     <or-exp>    ::= <lit-exp> or <list-lit>
 
 ;     <list-lit>  ::= <lit-exp>
-;                 ::= <or-exp>
+;                 ::= (or-exp)
 
-;     <clausula>  ::= <list-lit>
+;     <clausula>  ::= (<list-lit>)
 
 ;     <and-exp>   ::= <clausula> and <list-clausula>
 
 ; <list-clausula> ::= <clausula>
 ;                 ::= <and-exp>
 
-;       <fnc-exp> ::= (<int> <list-clausula>)
+; 2. Implementacion por medio de LISTAS (Una forma diferente de representar la gramatica sin usar constructores y extractores a mano)
+; 0. Gramatica
+;     <lit-exp>   ::=  <int>
+;                 ::= -<int>
+;
+;     <or-exp>    ::= <lit-exp> or <list-lit>
+;
+;     <list-lit>  ::= <lit-exp>
+;                 ::= (or-exp)
+;
+;     <clausula>  ::= (<list-lit>)
+;
+;     <and-exp>   ::= <clausula> and <list-clausula>
 
-; 1. Implementacion por medio de DATATYPES (Hecho en base a los datatypes del segundo punto)
+; <list-clausula> ::= <clausula>
+;                 ::= <and-exp>
 
-(define-datatype dt-lit-exp dt-lit-exp?
-  (make-pos-lit 
-      (n number?)
-   )
+; 1. Implementacion por medio de Constructores y Extractores (Hecho en base a los datatypes del segundo punto)
 
-  (make-neg-lit 
-      (n number?)
+; lit-exp
+; --- constructores
+(define (make-pos-lit n)
+     (list 'pos-lit n)
+)
+
+(define (make-neg-lit n)
+     (list 'neg-lit n)
+)
+
+; --- extractor
+(define lit-exp->n
+     (lambda (lit-exp)
+          (cadr lit-exp)
+     )
+)
+
+; list-lit
+
+; --- constructores
+; no hacemos uno para single-lit porque es el mismo que el de lit-exp, ya que un single-lit es un lit-exp :3
+
+(define (make-or-exp l rest)
+     (list 'or-exp l rest)
+)
+
+; --- extractores
+(define list-lit->l
+     (lambda (list-lit)
+          (cadr list-lit)
+     )
+)
+
+; or-exp
+
+; --- extractores, solo estos porque los demas ya estan en list-lit
+(define or-exp->l
+   (lambda (or-exp)
+      (cadr or-exp)
    )
 )
 
-(define-datatype dt-list-lit dt-list-lit?
-  (make-single-lit 
-      (l dt-lit-exp?)
-   )
-
-  (make-or-exp  
-      (l dt-lit-exp?) 
-      (rest dt-list-lit?)
-   )
-) 
-
-(define-datatype dt-clausula dt-clausula?
-  (make-clause
-      (lits dt-list-lit?)
+(define or-exp->rest
+   (lambda (or-exp)
+      (caddr or-exp)
    )
 )
 
-(define-datatype dt-list-clausula dt-list-clausula?
-  (make-single-cl
-      (c dt-clausula?)
-   )
+; clausula
 
-  (make-and-exp
-      (c dt-clausula?) 
-      (rest dt-list-clausula?)
+; --- constructores
+(define (make-clause lits)
+   (list 'clause lits)
+)
+
+; --- extractores
+(define clause->lits
+   (lambda (clause)
+      (cadr clause)
    )
 )
 
-(define-datatype dt-fnc dt-fnc?
-  (make-formula
-      (n number?) 
-      (cls dt-list-clausula?)
+; list-clausula
+
+; --- constructores
+; no hacemos el de single-cl porque es el mismo que el de clausula, ya que un single-cl es una clausula :3
+
+(define (make-and-exp c rest)
+   (list 'and-exp c rest)
+)
+
+; --- extractores
+(define and-exp->c
+   (lambda (and-exp)
+      (cadr and-exp)
    )
 )
 
-;;---------------------------------------------------------------
+(define and-exp->rest
+   (lambda (and-exp)
+      (caddr and-exp)
+   )
+)
 
-;; Parser de literal <lit-exp> 
+; fnc
+
+; --- constructores
+(define (make-formula n cls)
+   (list 'formula n cls)
+)
+
+; --- extractores
+(define formula->n
+   (lambda (formula)
+      (cadr formula)
+   )
+)
+
+(define formula->cls
+  (lambda (formula)
+    (caddr formula)))
+
+; --- PARSER
+
+;; Parser de literal <lit-exp>
 (define parse-lit
   (lambda (dato)
     (cond
-      [ (and (positive? dato)(number? dato)) (make-pos-lit dato)]
-      [ (and (negative? dato)(number? dato)) (make-neg-lit dato)] )))
-
+      [(and (number? dato) (positive? dato)) (make-pos-lit dato)]
+      [(and (number? dato) (negative? dato)) (make-neg-lit dato)])))
 
 ;; Parser de lista de literales <list-lit>
 (define (parse-listlit dato)
-   (cond
-      [(number? dato) (make-single-lit (parse-lit dato))]
-      [(eqv? (cadr dato) 'or) (make-or-exp (parse-lit (car dato)) (parse-listlit (caddr dato)))]
-      )
-)
+  (cond
+    [(and (number? (car dato)) (null? (cdr dato))) (parse-lit (car dato))]           ; single-lit = el lit-exp mismo
+    [(eqv? (cadr dato) 'or)
+     (make-or-exp (parse-lit (car dato))
+                  (parse-listlit (cddr dato)))]))
 
-;; Parser de Clausula
+;; Parser de clausula
 (define parse-clausula
   (lambda (dato)
-    (make-clause (parse-listlit dato)) ))
-
+    (make-clause (parse-listlit dato))))
 
 ;; Parser de list-clausula
 (define parse-listclausula
   (lambda (dato)
     (cond
-      [(and (list? (car dato)) (null? (cdr dato))) (make-single-cl (parse-clausula (car dato)))]
-      [else (make-and-exp  (parse-clausula (car dato)) (parse-listclausula (cddr dato)))]
-      )
-    ))
+      [(and (list? (car dato)) (null? (cdr dato)))
+       (parse-clausula (car dato))]             ; single-cl = la clausula misma
+      [(eqv? (cadr dato) 'and)
+       (make-and-exp (parse-clausula (car dato))
+                     (parse-listclausula (cddr dato)))])))
 
 ;; Parser de FNC
 (define parse-fnc
   (lambda (dato)
-    (make-formula (cadr dato) (parse-listclausula (caddr dato)))))
+    (make-formula (cadr dato)
+                  (parse-listclausula (caddr dato)))))
 
+(define PARSEBNF parse-fnc)
 
-;; UNPARSER
+; --- UNPARSER
 
+;; Unparser de lit-exp
+(define (unparse-lit exp)
+  (cond
+    [(eqv? (car exp) 'pos-lit) (lit-exp->n exp)]
+    [(eqv? (car exp) 'neg-lit) (lit-exp->n exp)]))
+
+;; Unparser de list-lit
+(define (unparse-listlit exp)
+  (cond
+    [(eqv? (car exp) 'or-exp)
+     (cons (unparse-lit (or-exp->l exp))
+           (cons 'or (unparse-listlit (or-exp->rest exp))))]
+    [else                                       ; single-lit: es un lit-exp directo
+     (list (unparse-lit exp))]))
+
+;; Unparser de clausula
+(define (unparse-clausula exp)
+  (list (unparse-listlit (clause->lits exp))))
+
+;; Unparser de list-clausula
+(define (unparse-list-clausula exp)
+  (cond
+    [(eqv? (car exp) 'and-exp)
+     (cons (unparse-clausula (and-exp->c exp))
+           (cons 'and (unparse-list-clausula (and-exp->rest exp))))]
+    [else                                       ; single-cl: es una clausula directa
+     (unparse-clausula exp)]))
+
+;; Unparser de FNC
+(define (unparse-fnc exp)
+  (cons 'FNC
+        (cons (formula->n exp)
+              (unparse-list-clausula (formula->cls exp)))))
+
+(define UNPARSEBNF unparse-fnc)
