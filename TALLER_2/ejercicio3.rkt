@@ -68,7 +68,7 @@
      )
 )
 
-; --- PARSER
+; --- PARSER POR DATATYPES
 
 ;; Parser de literal <lit-exp> 
 (define parse-lit
@@ -110,7 +110,7 @@
 
 (define PARSEBNF parse-fnc)
 
-; --- UNPARSER
+; --- UNPARSER POR DATATYPES
 
 ;; Unparser de lit-exp
 (define (unparse-lit exp)
@@ -231,7 +231,7 @@
      )
 )
 
-;; Ejemplos cortos para verificar resultado
+;; ejemplos cortos para verificar resultado >:)
 (displayln (EVALUARSAT '(FNC 4 ((1 or -2 or 3 or 4) and (-2 or 3) and (-1 or -2 or -3) and (3 or 4) and (2)))))
 (displayln (EVALUARSAT '(FNC 2 ((1 or 2) and (-1) and (-2)))))
 (displayln (EVALUARSAT '(FNC 1 ((1)) )))
