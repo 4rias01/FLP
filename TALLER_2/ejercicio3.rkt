@@ -1,5 +1,4 @@
 #lang eopl
-(require racket/base racket/list)
 
 ;; terminal -> se lee directo
 ;; NO terminal -> Requiere su propio PARSER.
@@ -149,12 +148,8 @@
 
 (define UNPARSEBNF unparse-fnc)
 
-(define i0 (PARSEBNF '(FNC 5 ( (1 or -2 or 3) and (4 or 5) ) )))
-(displayln i0)
 
 
-(define i1 (UNPARSEBNF (PARSEBNF '(FNC 5 ( (1 or -2 or 3) and (4 or 5) ) )) ))
-(displayln i1)
 
 ; --- RESOLUTOR
 
