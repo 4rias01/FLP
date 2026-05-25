@@ -12,6 +12,7 @@
 ;; como funcionaban los elementos de una TAD.
 ;; -Se uso la IA para comprender mensajes de error en la consola de DrRacket para hallar las equivocaciones en nuestras
 ;; funciones y corregirlas nosotros mismos.
+;; -Se usa la IA para revisar la redacción correcta de comentarios, con signos de puntuación y demás.
 ;; Se declara que todos los integrantes comprenden y pueden explicar
 ;; completamente cada solución implementada.
 
