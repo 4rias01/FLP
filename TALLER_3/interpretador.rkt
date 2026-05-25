@@ -10,7 +10,7 @@
    (comentario
     ("%" (arbno (not #\newline))) skip)
    (identificador
-    ("@" letter (arbno (or letter digit "?")))
+    (letter (arbno (or letter digit "?")))
     symbol)
    (numero
     (digit (arbno digit))
@@ -31,7 +31,7 @@
   '((programa (expresion) un-programa)
     (expresion (numero) numero-lit)
     (expresion (comilla texto comilla) texto-lit)
-    (expresion (identificador) var-exp)
+    (expresion ("@" identificador) var-exp)
     (expresion ("(" expresion primitiva-binaria expresion ")") primapp-bin-exp)
     (expresion (primitiva-unaria "(" expresion ")") primapp-un-exp)
 
@@ -46,6 +46,10 @@
     (primitiva-binaria ("<=") primitiva-menor-igual)
     (primitiva-binaria ("!=") primitiva-diferente)
     (primitiva-binaria ("==") primitiva-comparador-igual)
+
+    (primitiva-unaria ("add1") primitiva-add1)
+    (primitiva-unaria ("sub1") primitiva-sub1)
+    (primitiva-unaria ("neg") primitiva-negacion-booleana)
     ))
 
 
@@ -87,7 +91,7 @@
   (lambda (pgm)
     (cases programa pgm
       (un-programa (cuerpo)
-                 (eval-expression cuerpo (init-env))))))
+                 (eval-expresion cuerpo (init-env))))))
 
 ; Ambiente inicial
 ;(define init-env
@@ -100,20 +104,25 @@
   (lambda ()
     (extend-env
      '(x y z f)
-     (list 4 2 5 (closure '(y) (primapp-exp (mult-prim) (cons (var-exp 'y) (cons (primapp-exp (decr-prim) (cons (var-exp 'y) '())) '())))
-                      (empty-env)))
+     (list 4 2 5 3 1)
      (empty-env))))
 
 ;eval-expression: <expression> <enviroment> -> numero
 ; evalua la expresión en el ambiente de entrada
-(define eval-expression
+(define eval-expresion
   (lambda (exp env)
     (cases expresion exp
       (numero-lit (num) num)
-      (texto-lit (txt) txt)
-      (var-exp (id) id)
-      (primapp-bin-exp (exp1 prim-binaria exp2) exp1)
-      (primapp-un-exp (primitiva-unaria expresion) primitiva-unaria)
+      (texto-lit (comilla1 txt comilla2) txt)
+      (var-exp (id) (apply-env env id))
+      (primapp-bin-exp (exp1 prim-binaria exp2) (apply-primitiva-binaria
+                                                 prim-binaria
+                                                 (list
+                                                  (eval-expresion exp1 env)
+                                                  (eval-expresion exp2 env))))
+      (primapp-un-exp (primitiva-unaria expresion) (apply-primitiva-unaria
+                                                    primitiva-unaria
+                                                    (eval-expresion expresion env)))
       )))
 
 ; funciones auxiliares para aplicar eval-expression a cada elemento de una 
@@ -124,24 +133,33 @@
 
 (define eval-rand
   (lambda (rand env)
-    (eval-expression rand env)))
+    (eval-expresion rand env)))
 
 ;apply-primitive: <primitiva> <list-of-expression> -> numero
-(define apply-primitive
+(define apply-primitiva-binaria
   (lambda (prim args)
-    (cases primitiva prim
+    (cases primitiva-binaria prim
       (primitiva-suma () (+ (car args) (cadr args)))
       (primitiva-resta () (- (car args) (cadr args)))
       (primitiva-div () (/ (car args) (cadr args)))
       (primitiva-multi () (* (car args) (cadr args)))
       (primitiva-concat () (car args))
-      (primitiva-mayor () (car args))
-      (primitiva-menor () (car args))
-      (primitiva-mayor-igual () (car args))
-      (primitiva-menor-igual () (car args))
-      (primitiva-diferente () (car args))
-      (primitiva-comparador-igual () (car args))
+      (primitiva-mayor () (if (> (car args) (cadr args)) 1 0))
+      (primitiva-menor () (if (< (car args) (cadr args)) 1 0))
+      (primitiva-mayor-igual () (if (>= (car args) (cadr args)) 1 0))
+      (primitiva-menor-igual () (if (<= (car args) (cadr args)) 1 0))
+      (primitiva-diferente () (if (equal? (car args) (cadr args)) 0 1))
+      (primitiva-comparador-igual () (if (equal? (car args) (cadr args)) 1 0))
       )))
+
+(define apply-primitiva-unaria
+  (lambda (prim arg)
+    (cases primitiva-unaria prim
+      (primitiva-add1 () (+ arg 1))
+      (primitiva-sub1 () (- arg 1))
+      (primitiva-negacion-booleana () (if (equal? arg 0) 1 0))
+      )
+    ))
 
 ;true-value?: determina si un valor dado corresponde a un valor booleano falso o verdadero
 (define true-value?
@@ -153,7 +171,7 @@
 (define-datatype procval procval?
   (closure
    (ids (list-of symbol?))
-   (body expression?)
+   (body expresion?)
    (env environment?)))
 
 ;apply-procedure: evalua el cuerpo de un procedimientos en el ambiente extendido correspondiente
@@ -161,7 +179,7 @@
   (lambda (proc args)
     (cases procval proc
       (closure (ids body env)
-               (eval-expression body (extend-env ids args env))))))
+               (eval-expresion body (extend-env ids args env))))))
 
 ;*******************************************************************************************
 ;Ambientes
@@ -174,7 +192,7 @@
                        (env environment?))
   (recursively-extended-env-record (proc-names (list-of symbol?))
                                    (idss (list-of (list-of symbol?)))
-                                   (bodies (list-of expression?))
+                                   (bodies (list-of expresion?))
                                    (env environment?)))
 
 (define scheme-value? (lambda (v) #t))
@@ -246,35 +264,7 @@
 (show-the-datatypes)
 just-scan
 scan&parse
-(just-scan "add1(x)")
-(just-scan "add1(   x   )%cccc")
-(just-scan "add1(  +(5, x)   )%cccc")
-(just-scan "add1(  +(5, %ccccc x) ")
-(scan&parse "add1(x)")
-(scan&parse "add1(   x   )%cccc")
-(scan&parse "add1(  +(5, x)   )%cccc")
-(scan&parse "add1(  +(5, %cccc
-x)) ")
-(scan&parse "if -(x,4) then +(y,11) else *(y,10)")
-(scan&parse "let
-x = -(y,1)
-in
-let
-x = +(x,2)
-in
-add1(x)")
 
-(define caso1 (primapp-exp (incr-prim) (list (lit-exp 5))))
-(define exp-numero (lit-exp 8))
-(define exp-ident (var-exp 'c))
-(define exp-app (primapp-exp (add-prim) (list exp-numero exp-ident)))
-(define programa (a-program exp-app))
-(define una-expresion-dificil (primapp-exp (mult-prim)
-                                           (list (primapp-exp (incr-prim)
-                                                              (list (var-exp 'v)
-                                                                    (var-exp 'y)))
-                                                 (var-exp 'x)
-                                                 (lit-exp 200))))
-(define un-programa-dificil
-    (a-program una-expresion-dificil))
+
+
 (interpretador)
