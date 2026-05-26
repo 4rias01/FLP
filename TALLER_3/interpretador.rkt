@@ -36,8 +36,8 @@
     (expresion (primitiva-unaria "(" expresion ")") primapp-un-exp)
     (expresion ("Si" expresion "{" expresion "}" "sino" "{" expresion "}")
                condicional-exp)
-    (expression ("declarar"
-                 (arbno identificador "=" expresion ";") expresion)
+    (expresion ("declarar" "("
+                 (arbno identificador "=" expresion ";") ")" "{" expresion "}")
                 variableLocal-exp)
 
     (primitiva-binaria ("+") primitiva-suma)
@@ -136,7 +136,7 @@
       (variableLocal-exp (ids exps cuerpo)
                          (let ((args (eval-rands exps env)))
                            (eval-expresion cuerpo
-                                           (extend-env args ids env))))
+                                           (extend-env ids args env))))
       )))
 
 ; funciones auxiliares para aplicar eval-expression a cada elemento de una 
@@ -183,7 +183,7 @@
 
 ;*******************************************************************************************
 ;Procedimientos
-(define-datatype procval procval?
+(define-datatype procVal procVal?
   (closure
    (ids (list-of symbol?))
    (body expresion?)
@@ -192,7 +192,7 @@
 ;apply-procedure: evalua el cuerpo de un procedimientos en el ambiente extendido correspondiente
 (define apply-procedure
   (lambda (proc args)
-    (cases procval proc
+    (cases procVal proc
       (closure (ids body env)
                (eval-expresion body (extend-env ids args env))))))
 
