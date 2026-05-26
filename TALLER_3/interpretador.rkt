@@ -1,5 +1,7 @@
 #lang eopl
+(require racket/string)
 ;******************************************************************************************
+
 
 
 ;Especificación Léxica
@@ -10,30 +12,37 @@
    (comentario
     ("%" (arbno (not #\newline))) skip)
    (identificador
-    (letter (arbno (or letter digit "?")))
-    symbol)
+    ("@" letter (arbno (or letter digit "?"))) symbol)
    (numero
-    (digit (arbno digit))
-    number)
+    (digit (arbno digit)) number)
    (numero
-    ("-" digit (arbno digit))
-    number)
+    (digit (arbno digit) "." (arbno digit)) number)
+   (numero
+    ("-" digit (arbno digit)) number)
+   (numero
+    ("-" digit (arbno digit) "." (arbno digit)) number)
    (texto
-    (letter (arbno (or letter digit "_")))
-    symbol)
-   (comilla
-    ("\"")
-    symbol)))
+    (letter (arbno (or letter digit "_"))) string)
+   ))
 
 ;Especificación Sintáctica (gramática)
 
 (define grammar-simple-interpreter
   '((programa (expresion) un-programa)
     (expresion (numero) numero-lit)
-    (expresion (comilla texto comilla) texto-lit)
-    (expresion ("@" identificador) var-exp)
+    (expresion ("\"" texto "\"") texto-lit)
+    (expresion (identificador) var-exp)
     (expresion ("(" expresion primitiva-binaria expresion ")") primapp-bin-exp)
     (expresion (primitiva-unaria "(" expresion ")") primapp-un-exp)
+    (expresion ("Si" expresion "{" expresion "}" "sino" "{" expresion "}")
+               condicional-exp)
+    (expresion ("declarar" "("
+                 (arbno identificador "=" expresion ";") ")" "{" expresion "}")
+                variableLocal-exp)
+    (expresion ("procedimiento" "(" (separated-list identificador ",") ")"
+                                "{" expresion "}") procedimiento-exp)
+    (expresion ("evaluar" expresion "(" (separated-list expresion ",") ")"
+                          "finEval") app-exp)
 
     (primitiva-binaria ("+") primitiva-suma)
     (primitiva-binaria ("~") primitiva-resta)
@@ -50,6 +59,7 @@
     (primitiva-unaria ("add1") primitiva-add1)
     (primitiva-unaria ("sub1") primitiva-sub1)
     (primitiva-unaria ("neg") primitiva-negacion-booleana)
+    (primitiva-unaria ("longitud") primitiva-longitud)
     ))
 
 
@@ -91,7 +101,7 @@
   (lambda (pgm)
     (cases programa pgm
       (un-programa (cuerpo)
-                 (eval-expresion cuerpo (init-env))))))
+                 (eval-expresion cuerpo (ambiente-inicial))))))
 
 ; Ambiente inicial
 ;(define init-env
@@ -100,50 +110,69 @@
 ;     '(x y z)
 ;     '(4 2 5)
 ;     (empty-env))))
-(define init-env
+(define ambiente-inicial
   (lambda ()
-    (extend-env
-     '(x y z f)
-     (list 4 2 5 3 1)
-     (empty-env))))
+    (extender-amb
+     '(@a @b @c @d @e)
+     (list 1 2 3 "HOLA" "FLP")
+     (ambiente-vacio))))
 
 ;eval-expression: <expression> <enviroment> -> numero
 ; evalua la expresión en el ambiente de entrada
 (define eval-expresion
-  (lambda (exp env)
+  (lambda (exp amb)
     (cases expresion exp
       (numero-lit (num) num)
-      (texto-lit (comilla1 txt comilla2) txt)
-      (var-exp (id) (apply-env env id))
-      (primapp-bin-exp (exp1 prim-binaria exp2) (apply-primitiva-binaria
-                                                 prim-binaria
-                                                 (list
-                                                  (eval-expresion exp1 env)
-                                                  (eval-expresion exp2 env))))
-      (primapp-un-exp (primitiva-unaria expresion) (apply-primitiva-unaria
+      (texto-lit (txt) txt)
+      (var-exp (id) (buscar-variable amb id))
+      (primapp-bin-exp (exp1 prim-binaria exp2)
+                       (let ((args (eval-rands (list exp1 exp2) amb)))
+                         (aplicar-primitiva-binaria
+                          prim-binaria
+                          args)))
+      (primapp-un-exp (primitiva-unaria expresion) (aplicar-primitiva-unaria
                                                     primitiva-unaria
-                                                    (eval-expresion expresion env)))
+                                                    (eval-expresion expresion amb)))
+      (condicional-exp (test-exp true-exp false-exp)
+                       (if (true-value? (eval-expresion test-exp amb))
+                           (eval-expresion true-exp amb)
+                           (eval-expresion false-exp amb)))
+      (variableLocal-exp (ids exps cuerpo)
+                         (let ((args (eval-rands exps amb)))
+                           (eval-expresion cuerpo
+                                           (extender-amb ids args amb))))
+      (procedimiento-exp (ids cuerpo) (cerradura
+                                       ids
+                                       cuerpo
+                                       amb))
+      (app-exp (exp exps) (let ((proc (eval-expresion exp amb))
+                                (args (eval-rands exps amb)))
+                            (if (procVal? proc)
+                                (aplicar-procedimiento proc args)
+                                (eopl:error 'eval-expresion
+                                 "Attempt to apply non-procedure ~s" proc))
+                            ))
       )))
 
 ; funciones auxiliares para aplicar eval-expression a cada elemento de una 
 ; lista de operandos (expresiones)
 (define eval-rands
-  (lambda (rands env)
-    (map (lambda (x) (eval-rand x env)) rands)))
+  (lambda (rands amb)
+    (map (lambda (x) (eval-rand x amb)) rands)))
 
 (define eval-rand
-  (lambda (rand env)
-    (eval-expresion rand env)))
+  (lambda (rand amb)
+    (eval-expresion rand amb)))
 
 ;apply-primitive: <primitiva> <list-of-expression> -> numero
-(define apply-primitiva-binaria
+(define aplicar-primitiva-binaria
   (lambda (prim args)
     (cases primitiva-binaria prim
       (primitiva-suma () (+ (car args) (cadr args)))
       (primitiva-resta () (- (car args) (cadr args)))
       (primitiva-div () (/ (car args) (cadr args)))
       (primitiva-multi () (* (car args) (cadr args)))
-      (primitiva-concat () (car args))
+      (primitiva-concat () (string-append (car args) (cadr args)))
       (primitiva-mayor () (if (> (car args) (cadr args)) 1 0))
       (primitiva-menor () (if (< (car args) (cadr args)) 1 0))
       (primitiva-mayor-igual () (if (>= (car args) (cadr args)) 1 0))
@@ -152,12 +181,13 @@
       (primitiva-comparador-igual () (if (equal? (car args) (cadr args)) 1 0))
       )))
 
-(define apply-primitiva-unaria
+(define aplicar-primitiva-unaria
   (lambda (prim arg)
     (cases primitiva-unaria prim
       (primitiva-add1 () (+ arg 1))
       (primitiva-sub1 () (- arg 1))
       (primitiva-negacion-booleana () (if (equal? arg 0) 1 0))
+      (primitiva-longitud () (string-length arg))
       )
     ))
 
@@ -168,74 +198,74 @@
 
 ;*******************************************************************************************
 ;Procedimientos
-(define-datatype procval procval?
-  (closure
+(define-datatype procVal procVal?
+  (cerradura
    (ids (list-of symbol?))
-   (body expresion?)
-   (env environment?)))
+   (cuerpo expresion?)
+   (amb ambiente?)))
 
 ;apply-procedure: evalua el cuerpo de un procedimientos en el ambiente extendido correspondiente
-(define apply-procedure
+(define aplicar-procedimiento
   (lambda (proc args)
-    (cases procval proc
-      (closure (ids body env)
-               (eval-expresion body (extend-env ids args env))))))
+    (cases procVal proc
+      (cerradura (ids cuerpo amb)
+               (eval-expresion cuerpo (extender-amb ids args amb))))))
 
 ;*******************************************************************************************
 ;Ambientes
 
 ;definición del tipo de dato ambiente
-(define-datatype environment environment?
-  (empty-env-record)
-  (extended-env-record (syms (list-of symbol?))
+(define-datatype ambiente ambiente?
+  (vacio)
+  (extendido (syms (list-of symbol?))
                        (vals (list-of scheme-value?))
-                       (env environment?))
-  (recursively-extended-env-record (proc-names (list-of symbol?))
+                       (amb ambiente?))
+  (extendido-recursivo (proc-names (list-of symbol?))
                                    (idss (list-of (list-of symbol?)))
-                                   (bodies (list-of expresion?))
-                                   (env environment?)))
+                                   (cuerpos (list-of expresion?))
+                                   (amb ambiente?)))
 
 (define scheme-value? (lambda (v) #t))
 
 ;empty-env:      -> enviroment
 ;función que crea un ambiente vacío
-(define empty-env  
+(define ambiente-vacio  
   (lambda ()
-    (empty-env-record)))       ;llamado al constructor de ambiente vacío 
+    (vacio)))       ;llamado al constructor de ambiente vacío 
 
 
 ;extend-env: <list-of symbols> <list-of numbers> enviroment -> enviroment
 ;función que crea un ambiente extendido
-(define extend-env
-  (lambda (syms vals env)
-    (extended-env-record syms vals env)))
+(define extender-amb
+  (lambda (syms vals amb)
+    (extendido syms vals amb)))
 
 ;extend-env-recursively: <list-of symbols> <list-of <list-of symbols>> <list-of expressions> environment -> environment
 ;función que crea un ambiente extendido para procedimientos recursivos
-(define extend-env-recursively
-  (lambda (proc-names idss bodies old-env)
-    (recursively-extended-env-record
-     proc-names idss bodies old-env)))
+(define extender-amb-rec
+  (lambda (proc-names idss cuerpos amb-viejo)
+    (extendido
+     proc-names idss cuerpos amb-viejo)))
 
 
 ;función que busca un símbolo en un ambiente
-(define apply-env
-  (lambda (env sym)
-    (cases environment env
-      (empty-env-record ()
-                        (eopl:error 'empty-env "No binding for ~s" sym))
-      (extended-env-record (syms vals old-env)
-                           (let ((pos (list-find-position sym syms)))
+(define buscar-variable
+  (lambda (amb sym)
+    (cases ambiente amb
+      (vacio ()
+             (eopl:error 'ambiente-vacio "No binding for ~s" sym))
+      (extendido (syms vals amb-viejo)
+                 (let ((pos (list-find-position sym syms)))
+                   (if (number? pos)
+                       (list-ref vals pos)
+                       (buscar-variable amb-viejo sym))))
+      (extendido-recursivo (nombres-proc idss cuerpos amb-viejo)
+                           (let ((pos (list-find-position sym nombres-proc)))
                              (if (number? pos)
-                                 (list-ref vals pos)
-                                 (apply-env old-env sym))))
-      (recursively-extended-env-record (proc-names idss bodies old-env)
-                                       (let ((pos (list-find-position sym proc-names)))
-                                         (if (number? pos)
-                                             (closure (list-ref idss pos)
-                                                      (list-ref bodies pos)
-                                                      env)
-                                             (apply-env old-env sym)))))))
+                                 (cerradura (list-ref idss pos)
+                                            (list-ref cuerpos pos)
+                                            amb)
+                                 (buscar-variable amb-viejo sym)))))))
 
 
 ;****************************************************************************************
