@@ -519,7 +519,7 @@ CORRECCION:
 
 declarar(
     @integrantes = procedimiento()
-                     {"Santiago"};
+                     {"Santiago_JuanJosé_y_Sebastian"};
     @saludar = procedimiento(@f)
                      {procedimiento(){("Hola:" concat evaluar @f() finEval)}};
 )
@@ -531,6 +531,11 @@ declarar(
        evaluar @decorate() finEval
    }
 }
+
+Explicacion: nuestro error estuvo en la misma funcion saludar, ya que en el
+enunciado se especificaba que saludar debia ser una funcion que retornara otra
+función, y como la habiamos definido es como una funcion que devolvia la
+concatenación de los dos mensajes.
 
 ***** PUNTO F **************************************************************
 VERSION ANTIGUA:
@@ -547,7 +552,7 @@ CORRECCION
 
 declarar(
     @integrantes = procedimiento()
-                     {"Santiago"};
+                     {"Santiago_JuanJosé_y_Sebastian"};
     @saludar = procedimiento(@f)
                      {procedimiento(@g){(("Hola:" concat evaluar @f() finEval) concat @g)}};
 )
@@ -556,9 +561,13 @@ declarar(
        @decorate = evaluar @saludar (@integrantes) finEval;
    )
    {
-       evaluar @decorate("_estudiantes") finEval
+       evaluar @decorate("_EstudiantesFLP") finEval
    }
 }
+
+Explicacion: Mismo caso del punto pasado, sumado que al no haber hecho de saludar
+una funcion que retornara otra, se cambió la definición de decorate cosa que el
+enunciado explicitamente prohibia.
 ****************************************************************************
 |#
 
