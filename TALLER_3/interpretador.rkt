@@ -505,6 +505,8 @@ evaluar @sumaRango(2,5) finEval
 
 
 ***** PUNTO E **************************************************************
+VERSION ANTIGUA:
+
 declarar*[
     @integrantes() = "Santiago_JuanJosé_y_Sebastian"
     @saludar(@f) = ("Hola:" concat evaluar @f() finEval)
@@ -513,13 +515,49 @@ declarar*[
     evaluar @decorate () finEval 
 }
 
+CORRECCION:
+
+declarar(
+    @integrantes = procedimiento()
+                     {"Santiago"};
+    @saludar = procedimiento(@f)
+                     {procedimiento(){("Hola:" concat evaluar @f() finEval)}};
+)
+{
+   declarar(
+       @decorate = evaluar @saludar (@integrantes) finEval;
+   )
+   {
+       evaluar @decorate() finEval
+   }
+}
+
 ***** PUNTO F **************************************************************
+VERSION ANTIGUA:
+
 declarar*[
     @integrantes() = "Santiago_JuanJosé_y_Sebastian"
     @saludar(@f) = ("Hola:" concat evaluar @f() finEval)
     @decorate(@mensaje) = (evaluar @saludar (@integrantes) finEval concat @mensaje)
 ]{
     evaluar @decorate ("_EstudiantesFLP") finEval 
+}
+
+CORRECCION
+
+declarar(
+    @integrantes = procedimiento()
+                     {"Santiago"};
+    @saludar = procedimiento(@f)
+                     {procedimiento(@g){(("Hola:" concat evaluar @f() finEval) concat @g)}};
+)
+{
+   declarar(
+       @decorate = evaluar @saludar (@integrantes) finEval;
+   )
+   {
+       evaluar @decorate("_estudiantes") finEval
+   }
 }
 ****************************************************************************
 |#
